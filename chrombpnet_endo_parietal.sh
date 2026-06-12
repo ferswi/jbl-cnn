@@ -56,13 +56,18 @@ samtools view -@ 4 -F 1804 -f 2 -q 30 \
     -o $BASE_SC2/parietal_filtered.bam
 samtools index $BASE_SC2/bam/parietal_filtered.bam #todo filter again ?
 
- #todo; i dont understand this segment as well as i could
-picard MarkDuplicates \
-    I=$BASE_SC2/parietal_filtered.bam \
-    O=$BASE_SC2/parietal_nodup.bam \
-    M=$BASE_SC2/parietal_dup_metrics.txt \
+#todo figure this segment out ?
+ java -jar $EBROOTPICARD/picard.jar MarkDuplicates \
+    I=$BASE_SC2/bam/parietal_filtered.bam \
+    O=$BASE_SC2/bam/parietal_nodup.bam \
+    M=$BASE_SC2/bam/parietal_dup_metrics.txt \
     REMOVE_DUPLICATES=true
-
+#picard MarkDuplicates \
+#    I=$BASE_SC2/parietal_filtered.bam \
+#    O=$BASE_SC2/parietal_nodup.bam \
+#    M=$BASE_SC2/parietal_dup_metrics.txt \
+#    REMOVE_DUPLICATES=true
+#-------------------------------------------------------------------------end of segment to figure out
 
 #shift reads bc of the tn5 correction ? +4bp +strand, -5bp -strand.
 alignmentSieve \
