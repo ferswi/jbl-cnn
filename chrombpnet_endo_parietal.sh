@@ -5,7 +5,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
-#SBATCH --job-name=slurm_slurm
+#SBATCH --job-name=cbbpnet_endo+parietal
 #SBATCH --error=%x-%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=sophie.bernard-doucet@umontreal.ca
@@ -58,7 +58,8 @@ else
 fi
 
 # 2nd part of process, we're filtering hihi
-if [ ! -f $BASE_SC2/bam/parietal_filtered.bam ]; then
+if [ ! -f $BASE_SC2/bam/parietal_filtered.bam ];then
+  echo "filtering bams !"
   samtools view -@ 8 -F 1804 -f 2 -q 30 \
       $BASE_SC2/bam/parietal_merged.bam \
       -o $BASE_SC2/bam/parietal_filtered.bam
@@ -67,6 +68,7 @@ else
     echo "$(date) -- parietal_filtered.bam already exists, skipping filtering"
 fi
 
+#todo:bsed on echos, here in running
 #Step 3 of pre-pro, removing duplicates
 if [ ! -f $BASE_SC2/bam/parietal_nodup.bam ]; then
     echo "$(date) -- removing duplicates"
