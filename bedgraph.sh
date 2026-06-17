@@ -8,8 +8,10 @@
 #SBATCH --cpus-per-task=4
 
 # creation de bedgraphs normalises (CPM) à partir des bams stratifiés par cell type.
-#todo : CPM documentation here :
-module load bedtools
+
+module load samtools/1.20
+module load bedtools/2.31.0
+module load ucsc-tools
 
 set -euo pipefail
 
@@ -79,10 +81,10 @@ for BAM in "$BAM_DIR"/*.bam; do
     > "$BEDGRAPH" \
     && echo " bg généré : $(" $SAMPLE")" \
     || { echo "X, bg fail for $SAMPLE"; }
-  if [[ "$BIGWIG" == true ]]; then
-    BIGWIG="OUT_DIR/${SAMPLE}.CPM.bw"
+  if [[ "$MAKE_BIGWIG" == true ]]; then
+    BIGWIG="$OUT_DIR/${SAMPLE}.CPM.bw"
     bedGraphToBigWig "$BEDGRAPH" "$GENOME" "$BIGWIG" \
-    && echo "bw généré: $SAMPLE" \
-    || { echo "X, bw fail for $SAMPLE"; FAIL=$((FAIL+1)); }
+      && echo "bw généré: $SAMPLE" \
+      || { echo "X, bw fail for $SAMPLE"; FAIL=$((FAIL+1)); }
   fi
 done
