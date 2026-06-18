@@ -11,9 +11,14 @@
 
 module load samtools/1.20
 module load bedtools/2.31.0
-module load ucsc_genome_toolkit
+export PATH="$HOME/bin:$PATH"
 
-set -euo pipefail
+set -euo pipefail # this kept crashing bc of line 15 and the ucsc genome toolkit :
+#fix : go in your bin :
+#rm ~/bin/bedGraphToBigWig
+#wget -O ~/bin/bedGraphToBigWig https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/bedGraphToBigWig
+#chmod +x ~/bin/bedGraphToBigWig
+#~/bin/bedGraphToBigWig 2>&1 | head -1
 
 BAM_DIR="/lustre07/scratch/sbernarr/subset_bam/bam_files"
 OUT_DIR="/lustre07/scratch/sbernarr/subset_bam/output_bedgraphs"
@@ -21,7 +26,7 @@ GENOME="/lustre07/scratch/sbernarr/hg38.chrom.sizes"
 THREADS="${SLURM_CPUS_PER_TASK:-8}"
 SORT_MEM="3G"                                    # mémoire par thread pour samtools sort
 TMP_DIR="${SLURM_TMPDIR:-/localscratch/$SLURM_JOB_ID}"
-BIGWIG=true
+MAKE_BIGWIG=true
 FORCE=false
 
 
@@ -69,11 +74,11 @@ for BAM in "${BAMS[@]}";do
     echo "$SAMPLE : bam déjà trié w index"
   else
     samtools sort -@ "$THREADS" -m "$SORT_MEM" -T "$TMP_DIR/${SAMPLE}.tmp" -o "$SORTED_BAM" "$BAM" \
-    && samtools index "$SORTED_BAM" \
+    && samtools index "$SORTED_BAM"
   fi
 
   MAPPED=$(samtools view -c -F 4 "$SORTED_BAM")
-  if [[ "$MAPPED" -eq 0]]; then
+  if [[ "$MAPPED" -eq 0 ]]; then
     echo "$SAMPLE est empty, what happer ?"
     FAIL=$((FAIL+1))
     continue
@@ -109,3 +114,4 @@ for BAM in "${BAMS[@]}";do
 
 done
 echo "fin de bedgraph.sh"
+
