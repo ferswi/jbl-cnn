@@ -6,7 +6,8 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
 #SBATCH --job-name=cbbpnet_endo+parietal
-#SBATCH --error=%x-%j.err
+#SBATCH --output=cbpnet_ep_%j.out
+#SBATCH --error=cbpnet_ep_%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=sophie.bernard-doucet@umontreal.ca
 
@@ -26,10 +27,12 @@ source ~/envs/chrombpnet/bin/activate
 
 #apptainer build $SCRATCH/chrombpnet.sif docker-archive:$SCRATCH/chrombpnet.tar
 
+#variables
 BASE_SC2=/lustre07/scratch/sbernarr/sc2types_cbpn
-BASE_SUBSET=/lustre07/scratch/sbernarr/subset_bam/output
+BAM_FILES=/lustre07/scratch/sbernarr/subset_bam/bam_files
 REF=$BASE_SC2/ref
 
+#downloads of references if needed
 if [ ! -f $REF/hg38.standard.chrom.sizes ]; then
     wget -q https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes \
         -O $REF/hg38.chrom.sizes
@@ -45,16 +48,16 @@ fi
 if [ ! -f $BASE_SC2/bam/parietal_merged.bam ]; then
     echo "$(date) -- merging and sorting BAMs"
     samtools merge -@ 8 - \
-        $BASE_SUBSET/EBD21_crispri_1a_ex_endo_parietal.bam \
-        $BASE_SUBSET/EBD21_crispri_1b_ex_endo_parietal.bam \
-        $BASE_SUBSET/EBD21_crispri_2a_ex_endo_parietal.bam \
-        $BASE_SUBSET/EBD21_crispri_2b_ex_endo_parietal.bam \
+        $BAM_FILES/EBD21_crispri_1a_ex_endo_parietal.bam \
+        $BAM_FILES/EBD21_crispri_1b_ex_endo_parietal.bam \
+        $BAM_FILES/EBD21_crispri_2a_ex_endo_parietal.bam \
+        $BAM_FILES/EBD21_crispri_2b_ex_endo_parietal.bam \
         | samtools sort -@ 8 \
             -T $BASE_SC2/bam/parietal_sort_tmp \
             -o $BASE_SC2/bam/parietal_merged.bam
     samtools index $BASE_SC2/bam/parietal_merged.bam
 else
-    echo "$(date) -- parietal_merged.bam already exists, skipping"
+    echo "$(date) parietal_merged.bam already exists, skipping merg n sort"
 fi
 
 # 2nd part of process, we're filtering hihi
@@ -65,10 +68,9 @@ if [ ! -f $BASE_SC2/bam/parietal_filtered.bam ];then
       -o $BASE_SC2/bam/parietal_filtered.bam
   samtools index $BASE_SC2/bam/parietal_filtered.bam
 else
-    echo "$(date) -- parietal_filtered.bam already exists, skipping filtering"
+    echo "$(date) parietal_filtered.bam already exists, skipping filterin"
 fi
 
-#todo:bsed on echos, here in running
 #Step 3 of pre-pro, removing duplicates
 if [ ! -f $BASE_SC2/bam/parietal_nodup.bam ]; then
     echo "$(date) -- removing duplicates"
@@ -79,12 +81,14 @@ if [ ! -f $BASE_SC2/bam/parietal_nodup.bam ]; then
         REMOVE_DUPLICATES=true
     samtools index $BASE_SC2/bam/parietal_nodup.bam
 else
-    echo "$(date) -- parietal_nodup.bam already exists, skipping dedup"
+    echo "$(date) parietal_nodup.bam already exists, skippin duplicates removal"
 fi
 
 # 4e étape processing : shift reads bc of the tn5 correction ? +4bp +strand, -5bp -strand.
+#todo here in running 17/06 2pm
+#todo im not sure i understood this step 100%, DOCUMENTATION
 if [ ! -f $BASE_SC2/bam/parietal_shifted_sorted.bam ]; then
-    echo "$(date) -- shifting reads"
+    echo "$(date) shifting reads"
     alignmentSieve \
         --numberOfProcessors 8 \
         --ATACshift \
@@ -97,12 +101,12 @@ if [ ! -f $BASE_SC2/bam/parietal_shifted_sorted.bam ]; then
     samtools index $BASE_SC2/bam/parietal_shifted_sorted.bam
     rm $BASE_SC2/bam/parietal_shifted.bam
 else
-    echo "$(date) -- parietal_shifted_sorted.bam already exists, skipping shift"
+    echo "$(date) parietal_shifted_sorted.bam already exists, skipping shift"
 fi
 
-#5th step, calling the peaks
+#5th step, calling the peaks #todo understand this step better + documentation
 if [ ! -f $BASE_SC2/peaks/parietal/parietal_peaks.narrowPeak ]; then
-    echo "$(date) -- calling peaks"
+    echo "$(date) calling peaks"
     macs2 callpeak \
         -t $BASE_SC2/bam/parietal_shifted_sorted.bam \
         -f BAMPE \
@@ -117,22 +121,23 @@ if [ ! -f $BASE_SC2/peaks/parietal/parietal_peaks.narrowPeak ]; then
         --SPMR \
         --call-summits
 else
-    echo "$(date) -- peaks exist, skipping"
+    echo "$(date) peaks exist, skipping"
 fi
 
-
+#todo docu on this step, needed for quanti qlté via reports that outputs ? columns w q values
 #wget https://github.com/Boyle-Lab/Blacklist/raw/master/lists/hg38-blacklist.v2.bed.gz
 if [ ! -f $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak ]; then
-    echo "$(date) -- filtering blacklist from narrowPeak"
+    echo "$(date) filtering blacklist from narrowPeak"
     bedtools intersect \
         -v \
         -a $BASE_SC2/peaks/parietal/parietal_peaks.narrowPeak \
         -b $REF/hg38-blacklist.v2.bed.gz \
         > $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak
 else
-    echo "$(date) -- blacklisted narrowPeak exists, skipping"
+    echo "$(date) blacklisted narrowPeak exists, skipping"
 fi
 
+#todo idem here, more docu pls im dense
 # step 7, summit centered bed :
 # Generate non-peaks (background regions) bed file is coming from the macs2 output
   ## args here : -k9, 9nr sorts by -log10(qvalue) best peaks first, 2-10 = summit position ?
@@ -149,7 +154,7 @@ if [ ! -f $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.bed ]; then
         }' \
         > $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.bed
 else
-    echo "$(date) -- BED file exists, skipping"
+    echo "$(date) BED file exists, skipping"
 fi
 
 
