@@ -65,9 +65,9 @@ for BAM in "$BAM_DIR"/*.bam; do
   if [[ "$FORCE" == false && -s "$SORTED_BAM" && -s "$BAI" ]]; then
     echo "$SAMPLE :bam trié avec index found, skip it !"
   else
-    samtools sort -@ "$THREADS" -o "$SORTED_BAM" "$BAM"\
-    samtools index "$SORTED_BAM"\
-      && echo "$SAMPLE done sort and index"
+    samtools sort -@ "$THREADS" -o "$SORTED_BAM" "$BAM" \
+    && samtools index "$SORTED_BAM" \
+    && echo "$SAMPLE done sort and index"
   fi
 
   MAPPED=$(samtools view -c -F 4 "$SORTED_BAM")
