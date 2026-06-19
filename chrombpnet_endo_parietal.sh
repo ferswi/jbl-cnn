@@ -11,7 +11,6 @@
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=sophie.bernard-doucet@umontreal.ca
 
-set -e
 set -o pipefail
 
 module --force purge
@@ -32,18 +31,6 @@ source ~/envs/chrombpnet/bin/activate
 BASE_SC2=/lustre07/scratch/sbernarr/sc2types_cbpn
 BAM_FILES=/lustre07/scratch/sbernarr/subset_bam/bam_files
 REF=$BASE_SC2/ref
-
-#downloads of references if needed
-if [ ! -f $REF/hg38.standard.chrom.sizes ]; then
-    wget -q https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.chrom.sizes \
-        -O $REF/hg38.chrom.sizes
-    grep -E "^chr([0-9]+|X|Y)\s" $REF/hg38.chrom.sizes > $REF/hg38.standard.chrom.sizes
-fi
-
-if [ ! -f $REF/hg38-blacklist.v2.bed.gz ]; then
-    wget -q https://github.com/Boyle-Lab/Blacklist/raw/master/lists/hg38-blacklist.v2.bed.gz \
-        -O $REF/hg38-blacklist.v2.bed.gz
-fi
 
 # 1st part of process, merge all the subdivded bam files together.
 if [ ! -f $BASE_SC2/bam/parietal_merged.bam ]; then
