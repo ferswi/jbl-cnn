@@ -125,13 +125,27 @@ else
     echo "$(date) blacklisted narrowPeak exists, skipping"
 fi
 
-#todo idem here, more docu pls im dense
 # step 7, summit centered bed :
 # Generate non-peaks (background regions) bed file is coming from the macs2 output
   ## args here : -k9, 9nr sorts by -log10(qvalue) best peaks first, 2-10 = summit position ?
   ## ± 250 gives 500 window and 4-9 keep name and score.
-if [ ! -f $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.bed ]; then
-    echo "$(date) -- creating summit-centered BED"
+#if [ ! -f $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.bed ]; then
+#    echo "$(date) -- creating summit-centered BED"
+#    sort -k9,9nr \
+#        $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak \
+#        | awk 'BEGIN{OFS="\t"} {
+#            start = $2 + $10 - 250
+#            end   = $2 + $10 + 250
+#            if (start < 0) next
+#            print $1, start, end, $4, $9
+#        }' \
+#        > $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.bed
+#else
+#    echo "$(date) BED file exists, skipping"
+#fi
+#todo, gonna try this naive thinking for the generation of the right narrowPeak thing
+if [ ! -f $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.narrowPeak ]; then
+    echo "$(date) -- creating summit-centered narrowPeak"
     sort -k9,9nr \
         $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak \
         | awk 'BEGIN{OFS="\t"} {
@@ -140,9 +154,9 @@ if [ ! -f $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.bed ]; then
             if (start < 0) next
             print $1, start, end, $4, $9
         }' \
-        > $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.bed
+        > $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.narrowPeak
 else
-    echo "$(date) BED file exists, skipping"
+    echo "$(date) narrowPeak file exists, skipping"
 fi
 
 
@@ -160,11 +174,12 @@ fi
 
 
 #Step 9 and final of preprocessing : generate nonpeak background regions
+# -p arg take the narrowPeak instead of the bed for column mismatches
 if [ ! -f $BASE_SC2/output/parietal/parietal_nonpeaks.bed ]; then
     echo "$(date) -- generating non-peak regions"
     chrombpnet prep nonpeaks \
         -g $REF/hg38.fa \
-        -p $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.bed \
+        -p $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.narrowPeak \
         -c $REF/hg38.standard.chrom.sizes \
         -fl $BASE_SC2/splits/endoparietal_fold.json \
         -br $REF/hg38-blacklist.v2.bed.gz \
