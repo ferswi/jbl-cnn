@@ -34,7 +34,7 @@ REF=$BASE_SC2/ref
 
 # 1st part of process, merge all the subdivded bam files together.
 if [ ! -f $BASE_SC2/bam/parietal_merged.bam ]; then
-    echo "$(date) -- merging and sorting BAMs"
+    echo "$(date) merging and sorting BAMs"
     samtools merge -@ 8 - \
         $BAM_FILES/EBD21_crispri_1a_ex_endo_parietal.bam \
         $BAM_FILES/EBD21_crispri_1b_ex_endo_parietal.bam \
@@ -145,7 +145,7 @@ fi
 #fi
 #todo, gonna try this naive thinking for the generation of the right narrowPeak thing
 if [ ! -f $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.narrowPeak ]; then
-    echo "$(date) -- creating summit-centered narrowPeak"
+    echo "$(date) creating summit-centered narrowPeak"
     sort -k9,9nr \
         $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak \
         | awk 'BEGIN{OFS="\t"} {
@@ -162,21 +162,21 @@ fi
 
 # Step 8 : define train, validation and test chromosome splits (standard encode cross validation)
 if [ ! -f $BASE_SC2/splits/endoparietal_fold.json ]; then
-    echo "$(date) -- creating chromosome splits"
+    echo "$(date) creating chromosome splits"
     chrombpnet prep splits \
         -op $BASE_SC2/splits/endoparietal_fold \
         -c $REF/hg38.standard.chrom.sizes \
         -tcr chr1 \
         -vcr chr8 chr10
 else
-    echo "$(date) -- splits exist, skipping"
+    echo "$(date) splits exist, skipping"
 fi
 
 
 #Step 9 and final of preprocessing : generate nonpeak background regions
 # -p arg take the narrowPeak instead of the bed for column mismatches
-if [ ! -f $BASE_SC2/output/parietal/parietal_nonpeaks.bed ]; then
-    echo "$(date) -- generating non-peak regions"
+if [ ! -f $BASE_SC2/output/parietal/parietal_nonpeaks.narrowPeak ]; then
+    echo "$(date) generating non-peak regions"
     chrombpnet prep nonpeaks \
         -g $REF/hg38.fa \
         -p $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.narrowPeak \
@@ -185,10 +185,12 @@ if [ ! -f $BASE_SC2/output/parietal/parietal_nonpeaks.bed ]; then
         -br $REF/hg38-blacklist.v2.bed.gz \
         -o $BASE_SC2/output/parietal/
 else
-    echo "$(date) -- non-peaks exist, skipping"
+    echo "$(date) non-peaks exist, skipping"
 fi
 
 
+#------------------------------------------------------------------------- should i make a seperate script for this ?
+# ie one for pre-processing and then a main pipeline one or itd just be more confusing ?
 
 #chrombpnet main command
 #apptainer exec --nv $SCRATCH/chrombpnet.sif \
