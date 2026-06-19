@@ -175,11 +175,11 @@ fi
 
 #Step 9 and final of preprocessing : generate nonpeak background regions
 # -p arg take the narrowPeak instead of the bed for column mismatches
-if [ ! -f $BASE_SC2/output/parietal/parietal_nonpeaks.narrowPeak ]; then
+if [ ! -f $BASE_SC2/output/parietal/parietal_nonpeaks.bed ]; then
     echo "$(date) generating non-peak regions"
     chrombpnet prep nonpeaks \
         -g $REF/hg38.fa \
-        -p $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.narrowPeak \
+        -p $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak \
         -c $REF/hg38.standard.chrom.sizes \
         -fl $BASE_SC2/splits/endoparietal_fold.json \
         -br $REF/hg38-blacklist.v2.bed.gz \
