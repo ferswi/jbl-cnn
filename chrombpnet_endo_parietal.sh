@@ -22,6 +22,7 @@ module load python/3.11.5
 module load scipy-stack
 module load samtools/1.18
 module load picard/3.1.0
+java -jar $EBROOTPICARD/picard.jar
 
 source ~/envs/chrombpnet/bin/activate
 
