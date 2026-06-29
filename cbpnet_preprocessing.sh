@@ -25,6 +25,7 @@ java -jar $EBROOTPICARD/picard.jar
 
 source ~/envs/chrombpnet/bin/activate
 
+#only needed once for the sif file
 #apptainer build $SCRATCH/chrombpnet.sif docker-archive:$SCRATCH/chrombpnet.tar
 
 #variables
@@ -34,7 +35,6 @@ REF=$BASE_SC2/ref
 
 #auto remove the auxi file
 if [ -d $BASE_SC2/output/parietal/_auxiliary ]; then
-    echo "$(date) wiwiwi auxi file"
     rm -rf $BASE_SC2/output/parietal/_auxiliary
 fi
 
