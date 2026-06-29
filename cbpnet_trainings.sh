@@ -6,8 +6,8 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
 #SBATCH --job-name=train_parietal
-#SBATCH --output=train_parietal_%j.out
-#SBATCH --error=train_parietal_%j.err
+#SBATCH --output=training_%j.out
+#SBATCH --error=training_%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=sophie.bernard-doucet@umontreal.ca
 
@@ -63,23 +63,23 @@ if [ ! -f $BASE_SC2/bias_model/parietal/models/bias.h5 ]; then
             -n $NONPEAKS \
             -fl $BASE_SC2/splits/endoparietal_fold.json \
             -b 0.5 \
-            -o $BASE_SC2/bias_model/parietal/ \
+            -o $BASE_SC2/bias_model/parietal/models \
             -fp parietal
 else
-    echo "$(date) bias mdel is previously established"
+    echo "$(date) bias mdel was previously established"
 fi
 
-echo "$(date) so far so good, starting pipeline : main model"
-apptainer exec --nv $SCRATCH/chrombpnet.sif \
-    chrombpnet pipeline \
-        -ibam $BASE_SC2/bam/parietal_shifted_sorted.bam \
-        -d "ATAC" \
-        -g $REF/hg38.fa \
-        -c $REF/hg38.standard.chrom.sizes \
-        -p $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak \
-        -n $NONPEAKS \
-        -fl $BASE_SC2/splits/endoparietal_fold.json \
-        -b $BASE_SC2/bias_model/parietal/models/bias.h5 \
-        -o $BASE_SC2/chrombpnet_model/parietal/
-
-echo "$(date)  full script ran"
+#echo "$(date) so far so good, starting pipeline : main model"
+#apptainer exec --nv $SCRATCH/chrombpnet.sif \
+#    chrombpnet pipeline \
+#        -ibam $BASE_SC2/bam/parietal_shifted_sorted.bam \
+#        -d "ATAC" \
+#        -g $REF/hg38.fa \
+#        -c $REF/hg38.standard.chrom.sizes \
+#        -p $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak \
+#        -n $NONPEAKS \
+#        -fl $BASE_SC2/splits/endoparietal_fold.json \
+#        -b $BASE_SC2/bias_model/parietal/models/bias.h5 \
+#        -o $BASE_SC2/chrombpnet_model/parietal/
+#
+#echo "$(date)  full script ran"
