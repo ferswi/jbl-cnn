@@ -188,19 +188,23 @@ else
     echo "$(date) non-peaks exist, skipping"
 fi
 
+#todo : go over this
+echo "flagstat bam : "
+samtools flagstat $BASE_SC2/bam/parietal_shifted_sorted.bam
 
-#------------------------------------------------------------------------- should i make a seperate script for this ?
-# ie one for pre-processing and then a main pipeline one or itd just be more confusing ?
+echo "peaks informations : "
+echo "raw peaks:        $(wc -l < $BASE_SC2/peaks/parietal/parietal_peaks.narrowPeak)"
+echo "blacklisted peaks: $(wc -l < $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak)"
+echo "removed by blacklist: $(( $(wc -l < $BASE_SC2/peaks/parietal/parietal_peaks.narrowPeak) - $(wc -l < $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak) ))"
 
-#chrombpnet main command
-#apptainer exec --nv $SCRATCH/chrombpnet.sif \
-#    chrombpnet pipeline \
-#        -ibam $BASE_SC2/bam/parietal_shifted_sorted.bam \
-#        -d "ATAC" \
-#        -g $REF/hg38.fa \
-#        -c $REF/hg38.standard.chrom.sizes \
-#        -p $BASE_SC2/peaks/parietal/parietal_peaks_no_blacklist.bed \
-#        -n $BASE_SC2/output/parietal/parietal_nonpeaks.bed \
-#        -fl $BASE_SC2/splits/endoparietal_fold.json \
-#        -b $BASE_SC2/bias_model/ATAC_bias.h5 \
-#        -o $BASE_SC2/chrombpnet_model/parietal/
+echo "=== Fragment size (from MACS2 xls) ==="
+grep "fragment size" $BASE_SC2/peaks/parietal/parietal_peaks.xls
+
+echo "=== Q-value distribution of final peaks ==="
+awk '{print $9}' $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak \
+    | sort -n | awk '
+    BEGIN {min=999; max=0; sum=0; n=0}
+    {n++; sum+=$1; if($1<min)min=$1; if($1>max)max=$1}
+    END {printf "count: %d\nmin -log10(q): %.2f\nmax -log10(q): %.2f\nmean -log10(q): %.2f\n", n, min, max, sum/n}'
+
+

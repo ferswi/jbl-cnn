@@ -22,7 +22,8 @@ set -euo pipefail # this kept crashing bc of line 15 and the ucsc genome toolkit
 
 BAM_DIR="/lustre07/scratch/sbernarr/subset_bam/bam_files"
 OUT_DIR="/lustre07/scratch/sbernarr/subset_bam/output_bedgraphs"
-GENOME="/lustre07/scratch/sbernarr/hg38.chrom.sizes"
+GENOME="/lustre07/scratch/sbernarr/hg38.chrom.sizes.fromBAM"
+#GENOME="/lustre07/scratch/sbernarr/hg38.chrom.sizes"
 THREADS="${SLURM_CPUS_PER_TASK:-8}"
 SORT_MEM="3G"                                    # mémoire par thread pour samtools sort
 TMP_DIR="${SLURM_TMPDIR:-/localscratch/$SLURM_JOB_ID}"
