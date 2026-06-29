@@ -132,6 +132,7 @@ else
 fi
 
 # step 7, summit centered bed :
+
 # Generate non-peaks (background regions) bed file is coming from the macs2 output
   ## args here : -k9, 9nr sorts by -log10(qvalue) best peaks first, 2-10 = summit position ?
   ## ± 250 gives 500 window and 4-9 keep name and score.
@@ -195,18 +196,18 @@ else
 fi
 
 #todo : go over this
-echo "flagstat bam : "
+echo "! flagstat bam : "
 samtools flagstat $BASE_SC2/bam/parietal_shifted_sorted.bam
 
-echo "peaks informations : "
+echo " ! peaks informations : "
 echo "raw peaks:        $(wc -l < $BASE_SC2/peaks/parietal/parietal_peaks.narrowPeak)"
 echo "blacklisted peaks: $(wc -l < $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak)"
 echo "removed by blacklist: $(( $(wc -l < $BASE_SC2/peaks/parietal/parietal_peaks.narrowPeak) - $(wc -l < $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak) ))"
 
-echo "=== Fragment size (from MACS2 xls) ==="
-grep "fragment size" $BASE_SC2/peaks/parietal/parietal_peaks.xls
+echo "! macs2 xls: "
+grep "fragment size, ty xls file" $BASE_SC2/peaks/parietal/parietal_peaks.xls
 
-echo "=== Q-value distribution of final peaks ==="
+echo "! peaks q value" # i stole this
 awk '{print $9}' $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak \
     | sort -n | awk '
     BEGIN {min=999; max=0; sum=0; n=0}
