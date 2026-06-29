@@ -6,8 +6,8 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
 #SBATCH --job-name=cbbpnet_endo+parietal
-#SBATCH --output=cbpnet_ep_%j.out
-#SBATCH --error=cbpnet_ep_%j.err
+#SBATCH --output=preprocessing_ep_%j.out
+#SBATCH --error=preprocessing_ep_%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=sophie.bernard-doucet@umontreal.ca
 
@@ -31,6 +31,12 @@ source ~/envs/chrombpnet/bin/activate
 BASE_SC2=/lustre07/scratch/sbernarr/sc2types_cbpn
 BAM_FILES=/lustre07/scratch/sbernarr/subset_bam/bam_files
 REF=$BASE_SC2/ref
+
+#auto remove the auxi file
+if [ -d $BASE_SC2/output/parietal/_auxiliary ]; then
+    echo "$(date) wiwiwi auxi file"
+    rm -rf $BASE_SC2/output/parietal/_auxiliary
+fi
 
 # 1st part of process, merge all the subdivded bam files together.
 if [ ! -f $BASE_SC2/bam/parietal_merged.bam ]; then
