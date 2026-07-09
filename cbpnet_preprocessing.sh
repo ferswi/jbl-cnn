@@ -6,8 +6,8 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
 #SBATCH --job-name=cbbpnet_endo+parietal
-#SBATCH --output=preprocessing_ep_%j.out
-#SBATCH --error=preprocessing_ep_%j.err
+#SBATCH --output=/lustre07/scratch/sbernarr/sc2types_cbpn/preprocessing_ep_%j.out
+#SBATCH --error=/lustre07/scratch/sbernarr/sc2types_cbpn/preprocessing_ep_%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=sophie.bernard-doucet@umontreal.ca
 
@@ -25,7 +25,6 @@ java -jar $EBROOTPICARD/picard.jar
 
 source ~/envs/chrombpnet/bin/activate
 
-#only needed once for the sif file
 #apptainer build $SCRATCH/chrombpnet.sif docker-archive:$SCRATCH/chrombpnet.tar
 
 #variables
@@ -35,6 +34,7 @@ REF=$BASE_SC2/ref
 
 #auto remove the auxi file
 if [ -d $BASE_SC2/output/parietal/_auxiliary ]; then
+    echo "$(date) wiwiwi auxi file"
     rm -rf $BASE_SC2/output/parietal/_auxiliary
 fi
 
@@ -106,7 +106,7 @@ if [ ! -f $BASE_SC2/peaks/parietal/parietal_peaks.narrowPeak ]; then
         -f BAMPE \
         -n parietal \
         --outdir $BASE_SC2/peaks/parietal/ \
-        -g hs \
+        -g mm \
         --nomodel \
         --shift -75 \
         --extsize 150 \
@@ -119,13 +119,13 @@ else
 fi
 
 #todo docu on this step, needed for quanti qlté via reports that outputs ? columns w q values
-#wget https://github.com/Boyle-Lab/Blacklist/raw/master/lists/hg38-blacklist.v2.bed.gz
+#wget https://github.com/Boyle-Lab/Blacklist/raw/master/lists/mm10-blacklist.v2.bed.gz
 if [ ! -f $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak ]; then
     echo "$(date) filtering blacklist from narrowPeak"
     bedtools intersect \
         -v \
         -a $BASE_SC2/peaks/parietal/parietal_peaks.narrowPeak \
-        -b $REF/hg38-blacklist.v2.bed.gz \
+        -b $REF/mm10-blacklist.v2.bed.gz \
         > $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak
 else
     echo "$(date) blacklisted narrowPeak exists, skipping"
@@ -172,7 +172,7 @@ if [ ! -f $BASE_SC2/splits/endoparietal_fold.json ]; then
     echo "$(date) creating chromosome splits"
     chrombpnet prep splits \
         -op $BASE_SC2/splits/endoparietal_fold \
-        -c $REF/hg38.standard.chrom.sizes \
+        -c $REF/mm10.standard.chrom.sizes \
         -tcr chr1 \
         -vcr chr8 chr10
 else
@@ -185,11 +185,11 @@ fi
 if [ ! -f $BASE_SC2/output/parietal/parietal_nonpeaks.bed ]; then
     echo "$(date) generating non-peak regions"
     chrombpnet prep nonpeaks \
-        -g $REF/hg38.fa \
+        -g $REF/mm10.fa \
         -p $BASE_SC2/peaks/parietal/parietal_peaks_blacklisted.narrowPeak \
-        -c $REF/hg38.standard.chrom.sizes \
+        -c $REF/mm10.standard.chrom.sizes \
         -fl $BASE_SC2/splits/endoparietal_fold.json \
-        -br $REF/hg38-blacklist.v2.bed.gz \
+        -br $REF/mm10-blacklist.v2.bed.gz \
         -o $BASE_SC2/output/parietal/
 else
     echo "$(date) non-peaks exist, skipping"
